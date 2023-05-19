@@ -1,7 +1,7 @@
 <?php 
 ob_start();
 session_start();
-include("admin/includes/config.php");
+include("includes/config.php");
 ?>
 <?php
 if(isset($_GET['searchWord'])) {

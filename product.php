@@ -1,138 +1,128 @@
 <?php require_once('header.php'); ?>
-<!-- Produkti pec izveletes kategorijas -->
 <?php
-  $categorySlug = "";
-  $subcategorySlug = "";
-  if(isset($_GET['category'])) {
-    $categorySlug = $_GET['category'];
+if(isset($_SESSION['admin_id'])=="") {
+  header("Location: login.php");
+}
+$sql = "SELECT product.*, product_category.name AS categoryName FROM product, product_category WHERE product.categoryId = product_category.id ";
+$result = mysqli_query($conn, $sql);
+$row = mysqli_num_rows($result);
+if(isset($_GET['filterCategory'])) {
+  $filterOption = $_GET['filterCategory'];
+  for($i=1; $i<$row; $i++) {
+    switch($filterOption) {
+      case "default":
+        break;
+      case ($i):
+        $sql = "SELECT product.*, product_category.name AS categoryName FROM product_category JOIN product ON product_category.id = product.categoryId WHERE product_category.id = $i";
+        break;
+    }      
   }
-  if(isset($_GET['subcategory'])) {
-    $subcategorySlug = $_GET['subcategory'];
-  }
+}
+$result = mysqli_query($conn, $sql);
 ?>
 <div class="container">
-  <div class="product-list">
-    <div class="link-path">
-      <h4><a href="https://badmintonaveikals.shop/">Sākums</a>
-      <span class="link-path-seperator">»</span>
-      </h4>
-      <h4><a href="product?category=<?php echo $categorySlug;?>"> <?php echo $categorySlug;?></a></h4>
-      <span class="link-path-seperator">»</span>
-      <h4><a href="product?category=<?php echo $categorySlug;?>&subcategory=<?php echo $subcategorySlug;?>"><?php echo $subcategorySlug;?></a></h4>
-    </div>
-    <h2>Produkti</h2>
-    <form method="GET" action="">
-      <select name="sortProducts" id="sortProducts" onchange="sortFilter()">
-        <option value="default">Pēc noklusējuma</option>
-        <option value="cheapest">Lētākais augšā</option>
-        <option value="mostExpensive">Dārgākais augšā</option>
-      </select>
-    </form>
-    <div class="product-page-products" id="productContainer">
-    <?php
-  if(isset($_GET['category']) && isset($_GET['subcategory'])) { 
-    $categorySlug = $_GET['category'];
-    $subcategorySlug = $_GET['subcategory'];
-    $query = "SELECT * FROM product WHERE categoryId = (SELECT id FROM product_category WHERE slug = '$categorySlug') AND subcategoryId = (SELECT id FROM product_subcategory WHERE slug = '$subcategorySlug')";
-    if(isset($_GET['sortProducts'])) {
-      $sortOption = $_GET['sortProducts'];
-      switch($sortOption) {
-        case "default":
-          break;
-        case "cheapest":
-          $query = "SELECT * FROM product WHERE categoryId = (SELECT id FROM product_category WHERE slug = '$categorySlug') AND subcategoryId = (SELECT id FROM product_subcategory WHERE slug = '$subcategorySlug') ORDER BY price ASC";
-          break;
-        case "mostExpensive":
-          $query = "SELECT * FROM product WHERE categoryId = (SELECT id FROM product_category WHERE slug = '$categorySlug') AND subcategoryId = (SELECT id FROM product_subcategory WHERE slug = '$subcategorySlug') ORDER BY price DESC";
-          break;
-      }
-    }
-  }  
-  else if(isset($_GET['category'])) { 
-      $categorySlug = $_GET['category'];
-      $query = "SELECT * FROM product WHERE categoryId = (SELECT id FROM product_category WHERE slug = '$categorySlug')";
-      if(isset($_GET['sortProducts'])) {
-        $sortOption = $_GET['sortProducts'];
-        switch($sortOption) {
-          case "default":
-            break;
-          case "cheapest":
-            $query = "SELECT * FROM product WHERE categoryId = (SELECT id FROM product_category WHERE slug = '$categorySlug') ORDER BY price ASC";
-            break;
-          case "mostExpensive":
-            $query = "SELECT * FROM product WHERE categoryId = (SELECT id FROM product_category WHERE slug = '$categorySlug') ORDER BY price DESC";
-            break;
-        }
-      }
-    }
-    else if(isset($_GET['subcategory'])) {
-      $subcategorySlug = $_GET['subcategory'];
-      $query = "SELECT * FROM product WHERE subcategoryId = (SELECT id FROM product_subcategory WHERE slug = '$subcategorySlug')";
-      if(isset($_GET['sortProducts'])) {
-        $sortOption = $_GET['sortProducts'];
-        switch($sortOption) {
-          case "default":
-            break;
-          case "cheapest":
-            $query = "SELECT * FROM product WHERE subcategoryId = (SELECT id FROM product_subcategory WHERE slug = '$subcategorySlug') ORDER BY price ASC";
-            break;
-          case "mostExpensive":
-            $query = "SELECT * FROM product WHERE subcategoryId = (SELECT id FROM product_subcategory WHERE slug = '$subcategorySlug') ORDER BY price DESC";
-            break;
-        }
-      }
-    } else {
-      $query = "SELECT * FROM product";
-    }
-      $result = mysqli_query($conn, $query);
-      $count = 0;
-      if (mysqli_num_rows($result) > 0) {
-        while($row = mysqli_fetch_assoc($result)) {  
-          $row['price'] = str_replace('.',',',$row['price']);
-          if($row['discount'] != 0.00) {
-            $row['discount'] = str_replace('.',',',$row['discount']);
-          }
-          if ($count % 3 == 0) {
-      ?>
-      <div class="row row-products">
-        <?php } $count++; ?>
-        <div class="product-category" id="productPlace">
-          <a href="product-single?product=<?php echo $row['slug'];?>">
-          <img class="product-category-img" src="assets/img/<?php echo $row['featuredImage'];?>" width="100px" height="100px" alt="Produkta attēls">
-          <h4 class="product-category-title"><?php echo $row['name'];?></h4>
-          <div class="product-price">
-            <?php
-            if($row['discount'] != 0.00) {
-              echo '<strike><span class="regular-price">'.$row['price'].' €</span></strike>';
-              echo '<span class="discount-price">'.$row['discount'].' €</span>';
-            } else {
-              echo '<span>'.$row['price'].' €</span>';
-            }
-            ?>
-          </div>
-          <div class="stock">
-            <?php if($row['qty'] >= 1) { ?>
-              <span class="qty-status-stock">Noliktavā</span>
-            <?php } else { ?>
-              <span class="qty-status-stockout">Nav noliktavā</span>
-            <?php } ?>
-          </div>
-          </a>
-        </div>
-        <?php if ($count % 3 == 0) {  ?>
+  <div class="container-inner">
+    <div class="container-inner-top">
+      <div class="product-add">
+        <a href="product-add">Pievienot jaunu produktu</a>
       </div>
-      <?php
-      } 
-    }
-  } else { ?>
-    <div class="product-category">
-      <h4><?php echo "Produkti netika atrasti";?></h4>
     </div>
-  <?php
-  }
-  ?>
-  </div>
+    <!-- search bar -->
+    <div class="search-box" id="searchBox">
+      <form class="search-bar">
+        <div class="search-bar-input">
+          <input id="searchWord" type="text" placeholder="Meklēt" onkeyup="search()">
+        </div>  
+      </form>
+    <div id="results" class="search-bar-results"></div>
+    </div>
+    <h2>Esošie produkti:</h2>
+    <form method="GET">
+      <button id="filterCategory" class="save-btn">Piemērot</button>
+      <select class="form-select" name="filterCategory" id="categorySelect">
+        <option selected>Izvēlies kategoriju</option>
+        <?php
+        //izvada kategorijas 
+          $sqlSort = "SELECT * FROM product_category";
+          $resultSort = mysqli_query($conn, $sqlSort);
+          foreach($resultSort as $rowSort) {
+        ?>
+        <option value="<?php echo $rowSort['id'];?>"
+        <?php
+          if(isset($_GET['filterCategory']) && $_GET['filterCategory'] == $rowSort['id']) echo 'selected'; 
+          ?>>
+          <?php echo $rowSort['name'];?>
+        </option>
+        <?php    
+          }
+        ?>
+      </select></br>
+    </form>
+    <div class="container-table">
+      <div class="table-product" id="tableProduct">
+        <div class="table-header">
+          <div class="table-product-header table-product-header-product-id">Produkta id</div>
+          <div class="table-product-header">Produkta attēls</div>
+          <div class="table-product-header table-product-header-product-name">Produkta nosaukums</div>
+          <div class="table-product-header table-product-header-product-stock">Noliktavā</div>
+          <div class="table-product-header">Produkta cena</div>
+          <div class="table-product-header">Produkta cena ar atlaidi</div>
+          <div class="table-product-header table-product-header-product-category">Produkta kategorija</div>
+          <div class="table-product-header"></div>
+          <div class="table-product-header"></div> 
+          <div class="table-product-header"></div>
+        </div>
+        <div class="table-body">
+        <?php
+        if (mysqli_num_rows($result) > 0) {
+          while($row = mysqli_fetch_assoc($result)) {
+        ?>
+          <div class="table-row">
+            <div class="table-col table-col-product-id"><?php echo $row['id'];?></div>
+            <div class="table-col">
+              <img src="../assets/img/<?php echo $row['featuredImage'];?>" width="50px" height="50px">
+            </div>
+            <div class="table-col" id="tableColProductName"><?php echo $row['name'];?></div>
+            <div class="table-col">
+              <?php if($row['qty'] >= 1) { ?>
+                <span class="qty-status-stock">Ir noliktavā</span>
+              <?php } else { ?>
+                <span class="qty-status-stockout">Nav noliktavā</span>
+              <?php } ?>
+            </div>
+            <div class="table-col">
+              <?php if($row['discount'] != 0.00) { ?>
+                <span class="regular-price"><?php echo $row['price'];?> €</span>
+              <?php } else { ?>
+                <span class=""><?php echo $row['price'];?> €</span>
+              <?php } ?>
+            </div>
+            <div class="table-col">
+              <?php if($row['discount'] == 0.00) { ?>
+                <span class="discount-price-unactive"><?php echo $row['discount'];?> €</span>
+              <?php } else { ?>
+                <span class="discount-price-active"><?php echo $row['discount'];?> €</span>
+              <?php } ?>
+            </div>
+            <div class="table-col"><?php echo $row['categoryName'];?></div>
+            <div class="table-col"><a target="_blank" href="../product-single?product=<?php echo $row['slug']?>"><i class="fa-solid fa-up-right-from-square"></i></a></div>
+            <div class="table-col table-col-edit"><a href="product-edit?id=<?php echo $row['id']; ?>">Rediģēt</a></div>
+            <div class="table-col table-col-delete">
+              <a href="product-delete.php?id=<?php echo $row['id'];?>" onclick="confirmDelete(event, 'product-delete.php?id=<?php echo $row['id'];?>')">Dzēst</a>
+              <form id="deleteForm-<?php echo $row['id']; ?>" method="post" action="product-delete.php">
+                <input type="hidden" name="delete" value="true">
+                <input type="hidden" name="id" value="<?php echo $row['id'];?>">
+                <input type="hidden" name="confirmDelete" id="confirmDeleteInput-<?php echo $row['id']; ?>" value="">
+              </form>
+            </div>
+          </div>
+        <?php 
+          }
+        }
+        ?>
+        </div>
+      </div>
+    </div> 
   </div>
 </div>
-</div> 
 <?php require_once('footer.php'); ?>

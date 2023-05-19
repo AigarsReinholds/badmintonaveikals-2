@@ -1,7 +1,7 @@
 <?php
 session_start();
-include("admin/includes/config.php");
-unset($_SESSION['user_id']);
+include("includes/config.php");
+unset($_SESSION['admin_id']);
 session_destroy();
 header("Location: login");
 ?>

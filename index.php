@@ -1,132 +1,102 @@
 <?php require_once('header.php'); ?>
-<!-- Produktu kategorijas -->
+<?php
+if(isset($_SESSION['admin_id'])=="") {
+  header("Location: login");
+}
+$sqlProduct = "SELECT COUNT(id) AS totalProducts FROM product";
+$sqlCategory = "SELECT COUNT(id) AS totalCategories FROM product_category";
+$sqlSubcategory = "SELECT COUNT(id) AS totalSubcategories FROM product_subcategory";
+$sqlOrder = "SELECT COUNT(id) AS totalOrders FROM orders";
+$sqlEmployee = "SELECT COUNT(ID) AS totalEmployees FROM adminuser WHERE role='employee'";
+$sqlUser = "SELECT COUNT(id) AS totalUsers FROM user";
+$sqlMessage = "SELECT COUNT(id) AS totalMessages FROM message";
+
+$resultProduct = mysqli_query($conn, $sqlProduct);
+$resultCategory = mysqli_query($conn, $sqlCategory);
+$resultSubcategory = mysqli_query($conn, $sqlSubcategory);
+$resultOrder = mysqli_query($conn, $sqlOrder);
+$resultEmployee = mysqli_query($conn, $sqlEmployee);
+$resultUser = mysqli_query($conn, $sqlUser);
+$resultMessage = mysqli_query($conn, $sqlMessage);
+
+$rowProduct = mysqli_fetch_assoc($resultProduct);
+$rowCategory = mysqli_fetch_assoc($resultCategory);
+$rowSubcategory = mysqli_fetch_assoc($resultSubcategory);
+$rowOrder = mysqli_fetch_assoc($resultOrder);
+$rowEmployee = mysqli_fetch_assoc($resultEmployee);
+$rowUser = mysqli_fetch_assoc($resultUser);
+$rowMessage = mysqli_fetch_assoc($resultMessage);
+?>
 <div class="container">
-  <div class="product-categories">
-    <?php 
-      if(isset($_SESSION['successRegistration'])) {
-      ?>
-      <span class="success-message"><?php echo $_SESSION['successRegistration']; ?></span>
-      <?php
-        unset($_SESSION['successRegistration']);
-      }
-      ?>
-    <h2 class="categories-title">Katalogs</h2>
-    <?php
-      $sql = "SELECT * FROM product_category";
-      $result = mysqli_query($conn, $sql);
-      $count = 0;
-      $row = mysqli_fetch_assoc($result);
-      foreach ($result as $row) {
-        //parbauda vai kategorijai ir apakskategorijas
-        $categoryId = $row['id'];
-        $sqlSubcategory = "SELECT * FROM product_subcategory WHERE categoryId = '$categoryId'";
-        $resultSubcategory = mysqli_query($conn, $sqlSubcategory);
-        if ($count % 4 == 0) {
-    ?>
-    <div class="row row-product-categories">
-      <?php } $count++; ?>
-      <div class="product-category">
-        <?php
-        //parbauda vai kategorijai ir apakskategorijas
-        if(mysqli_num_rows($resultSubcategory) > 0) {
-        ?>
-        <a href="subcategory?category=<?php echo $row['slug']; ?>">
-        <?php } else { ?>
-        <a href="product?category=<?php echo $row['slug']?>">
-        <?php } ?>
-        <img class="product-category-img" src="assets/img/<?php echo $row['image'];?>" width="300px" height="300px" alt="Produkta kategorijas attēls">
-        <h4 class="product-category-title"><?php echo $row['name'];?></h4>
+  <div class="container-inner">
+    <div class="admin-panel">
+      <h1>Panelis</h1>
+      <?php if($_SESSION['user_role'] == 'employee') {?>
+      <!-- Darbiniekiem pieejams -->
+      <div class="product-box">
+        <a href="product">
+          <h2>Produkti (<?php echo $rowProduct['totalProducts'];?>)</h2>
         </a>
       </div>
-      <?php if ($count % 4 == 0) {  ?>
+      <div class="product-category-box">
+        <a href="category">
+          <h2>Kategorijas (<?php echo $rowCategory['totalCategories'];?>)</h2>
+        </a>
+      </div>
+      <div class="product-subcategory-box">
+        <a href="subcategory">
+          <h2>Apakškategorijas (<?php echo $rowSubcategory['totalSubcategories'];?>)</h2>
+        </a>
+      </div>
+      <div class="product-order-box">
+        <a href="order">
+          <h2>Pasūtījumi (<?php echo $rowOrder['totalOrders'];?>)</h2>
+        </a>
+      </div>
+      <div class="product-order-box">
+        <a href="message">
+          <h2>Ziņas (<?php echo $rowMessage['totalMessages'];?>)</h2>
+        </a>
+      </div>
+      <?php } else { ?>
+        <!-- Administratoram pieejams -->
+        <div class="product-box">
+        <a href="product">
+          <h2>Produkti (<?php echo $rowProduct['totalProducts'];?>)</h2>
+        </a>
+      </div>
+      <div class="product-category-box">
+        <a href="category">
+          <h2>Kategorijas (<?php echo $rowCategory['totalCategories'];?>)</h2>
+        </a>
+      </div>
+      <div class="product-subcategory-box">
+        <a href="subcategory">
+          <h2>Apakškategorijas (<?php echo $rowSubcategory['totalSubcategories'];?>)</h2>
+        </a>
+      </div>
+      <div class="product-order-box">
+        <a href="order">
+          <h2>Pasūtījumi (<?php echo $rowOrder['totalOrders'];?>)</h2>
+        </a>
+      </div>
+      <div class="product-order-box">
+        <a href="message">
+          <h2>Ziņas (<?php echo $rowMessage['totalMessages'];?>)</h2>
+        </a>
+      </div>
+      <div class="product-order-box">
+        <a href="employee">
+          <h2>Darbinieki (<?php echo $rowEmployee['totalEmployees'];?>)</h2>
+        </a>
+      </div>
+      <div class="product-order-box">
+        <a href="customer">
+          <h2>Lietotāji (<?php echo $rowUser['totalUsers'];?>)</h2>
+        </a>
+      </div>
+      <?php } ?>
     </div>
-    <?php
-        } 
-      } 
-    ?>  
   </div>
-  <div class="latest-products">
-    <h2 class="latest-products-title">Jaunākie produkti</h2>
-    <?php
-      $sql3 = "SELECT * FROM product ORDER BY id DESC LIMIT 6";
-      $result3 = mysqli_query($conn, $sql3);
-      $count2 = 0;
-      $row3 = mysqli_fetch_assoc($result3);
-      if (mysqli_num_rows($result3) > 0) {
-        foreach ($result3 as $row3) {
-          $row3['price'] = str_replace('.',',',$row3['price']);
-          if($row3['discount'] != 0.00) {
-            $row3['discount'] = str_replace('.',',',$row3['discount']);
-          }
-          if ($count2 % 3 == 0) {
-    ?>
-    <div class="row row-product-categories">
-      <?php } $count2++; ?>
-        <div class="product">
-          <a href="product-single?product=<?php echo $row3['slug'];?>">
-          <img class="product-img" src="assets/img/<?php echo $row3['featuredImage'];?>" width="300px" height="300px" alt="Produkta attēls">
-          <h4 class="product-category-title"><?php echo $row3['name'];?></h4>
-          <div class="product-price">
-            <?php
-            if($row3['discount'] != 0.00) {
-              echo '<strike><span class="regular-price">'.$row3['price'].' €</span></strike>';
-              echo '<span class="discount-price">'.$row3['discount'].' €</span>';
-            } else {
-              echo '<span>'.$row3['price'].' €</span>';
-            }
-            ?>
-          </div>
-          <div class="stock">
-            <?php if($row3['qty'] >= 1) { ?>
-              <span class="qty-status-stock">Noliktavā</span>
-            <?php } else { ?>
-              <span class="qty-status-stockout">Nav noliktavā</span>
-            <?php } ?>
-          </div>
-          </a>
-        </div>
-      <?php if ($count2 % 3 == 0) {  ?>
-      </div>
-      <?php
-      }
-    }
-  } 
-      ?>
-    </div>
-  <div class="contact-us-section" id="contactSection">
-    <h1 class="title">Sazinies ar mums!</h1>
-      <?php if(isset($_SESSION['messageSuccess'])) { ?>
-        <span class="success-message"><?php echo $_SESSION['messageSuccess']; ?></span>
-      <?php unset($_SESSION['messageSuccess']); } ?>
-      <?php if(isset($_SESSION['messageFailed'])) { ?>
-        <span class="error-message"><?php echo $_SESSION['messageFailed']; ?></span>
-      <?php unset($_SESSION['messageFailed']); } ?>
-      <?php if(isset($_SESSION['messageFieldEmpty'])) { ?>
-        <span class="error-message"><?php echo $_SESSION['messageFieldEmpty']; ?></span>
-      <?php unset($_SESSION['messageFieldEmpty']); } ?>
-      <?php if(isset($errorEmpty)) { ?><span class="error-message"><?php echo $errorEmpty; ?></span><?php } ?>
-    <form id="messageContactform" class="contactform" method="POST" action="send-message.php"> <!-- onsubmit="submitContactForm(event)" -->
-      <div class="form-item contactform-item">
-        <label class="contactform-label">Vārds <span class="required-label">*</span></label>
-        <input class="input-name" type="text" name="name" value="<?php if(isset($name)) { echo $name; }?>"></br>
-      </div>
-      <div class="form-item contactform-item">
-        <label class="contactform-label">E-pasts <span class="required-label">*</span></label>
-        <input class="input-email" type="email" name="email" value="<?php if(isset($email)) { echo $email; }?>"></br>
-      </div>
-      <div class="form-item contactform-item">
-        <label class="contactform-label">Temats <span class="required-label">*</span></label>
-        <input class="input-subject" type="text" name="subject" value="<?php if(isset($subject)) { echo $subject; }?>"></br>
-      </div>     
-      <div class="form-item contactform-item">
-        <label class="contactform-label">Ziņa <span class="required-label">*</span></label>
-        <textarea class="input-message" name="message" rows="10" cols="75"><?php if(isset($message)) { echo $message; }?></textarea>
-      </div>
-      <div class="form-item">
-        <button id="sendMessage" class="message-btn" type="submit" name="sendMessage">Nosūtīt</button>
-      </div>
-    </form>
-  </div>
-</div>
 </div>
 <?php require_once('footer.php'); ?>

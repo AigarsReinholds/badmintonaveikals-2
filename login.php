@@ -1,17 +1,20 @@
-<?php require_once('header.php');
-if(isset($_SESSION['user_id'])!="") {
+<?php
+ob_start();
+session_start();
+include("includes/config.php");
+if(isset($_SESSION['admin_id'])!="") {
   header("Location: profile");
-} 
+}
 if($_SERVER["REQUEST_METHOD"] == "POST") {
   if(empty($_POST['email'])) {
-    $emailErrorMessage = "Ievadiet e-pasta adresi";
+    $emailErrorMessage = "Ievadi e-pasta adresi";
   }
   else if(empty($_POST['password'])) {
-    $passwordErrorMessage = "Ievadiet paroli";
+    $passwordErrorMessage = "Ievadi paroli";
   } else {
     $email = mysqli_real_escape_string($conn, $_POST['email']);
     $password = mysqli_real_escape_string($conn, $_POST['password']);
-    $sql = "SELECT * FROM `user` WHERE email='$email' AND password=MD5('$password')";
+    $sql = "SELECT * FROM `adminuser` WHERE email='$email' AND password=MD5('$password')";
     $result = mysqli_query($conn, $sql);
     $row = mysqli_fetch_array($result);
     if($row == null) {
@@ -21,58 +24,76 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
       $status = $row['status'];
       if ($count == 1 && $status == 0) {
         $statusError = "Jūsu konts ir deaktivizēts";
-      } else { 
+      } else {  
         if ($count == 1) {
-          $_SESSION['user_id'] = $row['id'];
-          $_SESSION['user_role'] = $row['status'];
-          $sqlUpdate = "UPDATE user SET lastLogin = CONVERT_TZ(CURRENT_TIMESTAMP,'+00:00','+03:00') WHERE id = ". $_SESSION['user_id'];
-          $resultUpdate = mysqli_query($conn, $sqlUpdate);
-          header("Location: https://badmintonaveikals.shop/");
+          if($row['role'] == 'admin') {
+            $_SESSION['admin_id'] = $row['id'];
+            $_SESSION['user_role'] = 'admin';
+            $sqlUpdate = "UPDATE adminuser SET lastLogin = CONVERT_TZ(CURRENT_TIMESTAMP,'+00:00','+03:00') WHERE id = ". $_SESSION['admin_id'];
+            $resultUpdate = mysqli_query($conn, $sqlUpdate);
+            header("Location: https://badmintonaveikals.shop/admin");
+          }
+          else if($row['role'] == 'employee') {
+            $_SESSION['admin_id'] = $row['id'];
+            $_SESSION['user_role'] = 'employee';
+            $sqlUpdate = "UPDATE adminuser SET lastLogin = CONVERT_TZ(CURRENT_TIMESTAMP,'+00:00','+03:00') WHERE id = ". $_SESSION['admin_id'];
+            $resultUpdate = mysqli_query($conn, $sqlUpdate);
+            header("Location: https://badmintonaveikals.shop/admin");
+          }
         }
       }
     }
   }
 }
 ?>
-<div class="container">
-  <form class="login-form" action="" method="post">
-    <div class="login-form-inner">
-      <h1>Pieslēgties</h1>
-      <div class="form-item">
-        <?php if (isset($errorMessage)) { ?>
-          <span class="error-message"> <?php echo $errorMessage; ?></span></br>
-        <?php } ?> 
-        <?php if (isset($statusError)) { ?>
-            <span class="error-message"> <?php echo $statusError; ?></span></br>
-          <?php } ?> 
-        <label>E-pasts</label></br>
-        <input type="email" name="email" value="<?php if(isset($_POST['email'])) {echo $_POST['email'];}?>"></br>
-        <?php if (isset($emailErrorMessage)) { ?>
-          <span class="error-message"> <?php echo $emailErrorMessage; ?></span>  
-        <?php } ?>  
-      </div>
-      <div class="form-item">
-        <label>Parole</label></br>
-        <input id="password" type="password" name="password" value="<?php if(isset($_POST['password'])) {echo $_POST['password'];}?>">
-        <span id="togglePassword" class="toggle-password">
-          <i class="fa fa-eye-slash" onclick="togglePassword('password', 'togglePassword')"></i>
-        </span></br>
-        <?php if (isset($passwordErrorMessage)) { ?>
-          <span class="error-message"> <?php echo $passwordErrorMessage; ?></span>
-        <?php } ?> 
-      </div>
-      <div class="form-item">
-        <input class="login-submit-btn" type="submit" name="loginbtn" value="Pieslēgties">
-      </div>
-      <div class="row row-links">
-        <div class="login-forgot">
-          <p><a href="forgot-password">Aizmirsi paroli?</a></p>
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>admin login</title>
+    <link rel="stylesheet" href="assets/css/main.css">
+    <link href="https://fonts.cdnfonts.com/css/graphik" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="../assets/img/favicon-32x32.png">
+  </head>
+  <body>
+    <div class="container container-login">
+      <form class="login-form" action="" method="post">
+        <h1 class="form-title">Pieslēgšanās admin panelim</h1>
+        <div class="form-item">
+          <?php if (isset($errorMessage)) { ?>
+            <span class="error"> <?php echo $errorMessage; ?></span></br>
+          <?php } ?>
+          <?php if (isset($statusError)) { ?>
+            <span class="error"> <?php echo $statusError; ?></span></br>
+          <?php } ?>  
+          <label class="form-item-label">E-pasts</label></br>
+          <input class="form-item-input" type="email" name="email" value="<?php if(isset($_POST['email'])) {echo $_POST['email'];}?>"></br>
+          <?php if (isset($emailErrorMessage)) { ?>
+            <span class="error"> <?php echo $emailErrorMessage; ?></span>
+          <?php } ?>      
         </div>
-        <div class="link-registration">
-          <p><a href="registration">Reģistrēties</a></p>
+        <div class="form-item">
+          <label class="form-item-label">Parole</label></br>
+          <input id="password" class="form-item-input" type="password" name="password" value="<?php if(isset($_POST['password'])) {echo $_POST['password'];}?>">
+          <span id="togglePassword" class="toggle-password">
+            <i class="fa fa-eye-slash" onclick="togglePassword('password', 'togglePassword')"></i>
+          </span></br>
+          <?php if (isset($passwordErrorMessage)) { ?>
+            <span class="error"> <?php echo $passwordErrorMessage; ?></span>
+          <?php } ?>  
         </div>
-      </div>
-    </div>     
-  </form>
-</div>
-<?php require_once('footer.php'); ?>
+        <div class="form-item">
+          <input class="login-submit-btn" type="submit" name="loginbtn" value="Pieslēgties">
+        </div>
+        <div class="form-item">
+          <div class="login-forgot">
+            <p><a href="forgot-password">Aizmirsi paroli?</a></p>
+          </div>
+        </div>
+      </form>
+    </div>
+    <script src="assets/js/script.js"></script>
+  </body>
+</html>  

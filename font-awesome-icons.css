@@ -1,0 +1,27 @@
+.fa { font-weight: normal !important; }
+
+.fa-user {
+  color: #000;
+  font-size: 36px;
+}
+
+.fa-heart {
+  color: #000;
+  font-size: 36px;
+}
+
+.fa-cart-shopping {
+  color: #000;
+  font-size: 36px;
+  font-weight: 900 !important; /* temporary */
+}
+
+.fa-bars {
+  font-weight: 900 !important;
+}
+
+.fa-x { margin-right: 5px; }
+
+.fa-refresh { margin-right: 5px; }
+
+/*.fa-caret-down { padding-left: 5px }*/
